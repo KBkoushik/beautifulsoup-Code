@@ -1,0 +1,269 @@
+#SCRAPER_API_KEY = 'e1e2256dd210b51590662cc2d3990a89'
+emp_name = 'koushik'
+emp_no = 21
+
+# !pip install requests
+# !pip install beautifulsoup4
+# !pip install pandas
+
+import requests
+from bs4 import BeautifulSoup
+import time
+import pandas as pd
+
+SCRAPER_API_KEY_list =['4305c9b2d76c3478ef9880069418cbd8', 'bbb5cc45e9a1ffa202fbf31c1f44e7e5','90c90b35300966b25cae1c16ae4caf2d', 'd1b8cd70d48096839914129d037abf04', '5d9caeb3482451de6ca1e97fec9e510a', '1fda79b5163a5534e343db864c204b1c', '79e96c5e9821479624839b60441eca9c', '8a9870701f3e302ab658a0ef9adc0b4b', '17bd9953458c5d4ec1345e29f508f759']
+SCRAPER_API_KEY = SCRAPER_API_KEY_list[0]
+# Correct raw URL of the CSV file on GitHub
+url = 'https://raw.githubusercontent.com/KBkoushik/Suntec-India/main/Ajmadison%20product_id_list(31th%20july)%20ALL.csv'
+
+# Read the CSV file into a DataFrame
+product_model_list_df = pd.read_csv(url)
+
+# Display the DataFrame
+all_product_model_list = product_model_list_df['Product ID'].to_list()
+# Initialize the list
+range_list = []
+
+# Loop through the range in steps of 1000
+for i in range(0, 30001, 1000):
+    if i + 1000 <= 30000:
+        range_list.append([i , i + 1000])
+
+# Print the result
+#print(range_list)
+
+product_model_list = all_product_model_list[20000:30679]
+#print(product_model_list)
+
+
+final_product_list = []
+error_model_list = []
+done_list=[]
+number = 1
+
+print('The code is executed successfully')
+print("#"*40)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# final_product_list = []
+# error_model_list = []
+# done_list=[]
+# product_model_list = [
+#     'FDRB5303L', 'HP24RS4L', 'RS2484FLJK1', 'F7SFC36S1R', 'BIFP30R0', 'NOVA61', 'FS30L7PLUS2', 'VCFB5363LWH', 'CF5F0W', 'KFCR18RD'
+# ] # Example list of product models
+
+error_status = 0
+for m_no in product_model_list:
+    if m_no not in done_list:
+
+        url = f'https://www.ajmadison.com/cgi-bin/ajmadison/{m_no}.html'
+        scraperapi_url = f'http://api.scraperapi.com?api_key={SCRAPER_API_KEY}&url={url}'
+        response = requests.get(scraperapi_url)
+        print(url, ':', response.status_code,'#',number)
+        number = number +1
+        # Check if the request was successful
+        if response.status_code == 200:
+            time.sleep(1)
+            soup = BeautifulSoup(response.content, 'html.parser')
+            product_details = {}
+            product_details['product model no'] = m_no
+            product_details['product url'] = url
+
+            # Find the product name div with the specified class
+            name_div = soup.find('div', class_='block bold mb1 f12')
+            if name_div:
+                product_details['product name'] = name_div.text
+            else:
+                print('1st error')
+                error_model_list.append(m_no)
+                continue
+            #Find Category
+            category = soup.find('div', class_='mb1 blue font-size-sm breadcrumbs')
+            if category:
+                product_details['Total_category'] = category.text
+                x=category.text.split('>')
+                count=1
+                for i in x:
+                    #print(i.strip())
+                    cat_key = f'Category {count}'
+                    product_details[cat_key] = i.strip()
+                    count+=1
+            else:
+                print('Category not found')
+                error_model_list.append(m_no)
+                continue
+
+            # Find the div with the specified id for price
+            price_div_id = soup.find('div', id='pdp-header-right')
+            if price_div_id:
+                # Find the nested div with the specified class
+                price_div = price_div_id.find('div', class_='font-size-xxl ml1 bold red-1')
+
+                if price_div:
+                    product_details['price'] = price_div.text
+                else:
+                    price_div = price_div_id.find('div', class_='font-size-xxl ml1 bold black-0')
+                    if price_div:
+                        product_details['price'] = price_div.text
+                    else:
+                        print('2nd error')
+                        product_details['price'] = ""
+                        #error_model_list.append(m_no)
+                        #continue
+
+            all_image_links = soup.find_all('a', class_='scrollable__item mz-thumb inline-block border mr1')
+            # Extract the src attribute from the nested <img> tags
+            if all_image_links:
+                count = 1
+                for link in all_image_links:
+                    img_tag = link.find('img')
+                    if img_tag and 'src' in img_tag.attrs:
+                        img_url = img_tag['src']
+                        column_name = f'image{count}'
+                        product_details[column_name] = img_url
+                        count += 1
+
+            #Find the div with the specified class
+            product_info_div_class = soup.find('div', class_='left mr2')
+            if product_info_div_class:
+                # Find the nested div with the specified class
+                product_info_div = product_info_div_class.find_all('div', class_='px1 py05 border-bottom divided border-bottom-dashed')
+                if product_info_div:
+                    for info in product_info_div:
+                        info_list = info.text.replace('\n', '').split(sep=':')
+                        if len(info_list) == 2:
+                            product_details[info_list[0].strip()] = info_list[1].strip()
+                        else:
+                            product_details[info_list[0].strip()] = ''
+            else:
+                print('3rd error')
+                error_model_list.append(m_no)
+                continue
+
+            # Find the div with the specified id for description
+            desc_id = f'{product_details["Model"]}-description-tab-pane'
+            description_div_id = soup.find('div', id=desc_id)
+            if description_div_id:
+                desc_div = description_div_id.find('div', class_='mb2 gray-5')
+                if desc_div:
+                    product_details['Description'] = desc_div.text.strip()
+                else:
+                    print('4th error')
+                    error_model_list.append(m_no)
+                    continue
+
+            # Find the div with the specified id for specifications
+            specs_id = f'{product_details["Model"]}-specs-tab-pane'
+            specification_div_id = soup.find('div', id=specs_id)
+            if specification_div_id:
+                # Find the nested div with the specified class
+                specs_div = specification_div_id.find('div', class_='mb2')
+                if specs_div:
+                    # Iterate over the direct children of specs_div
+                    specs_text = ''
+                    for child in specs_div.children:
+                        if child.name == 'div':  # Check if the child is a div
+                            specs_text += f'{child.get_text(strip=True)}\n'
+                    product_details['Specifications'] = specs_text.strip()
+                else:
+                    print('5th error')
+                    error_model_list.append(m_no)
+                    continue
+
+            # Find the div with the specified id for features
+            features_id = f'{product_details["Model"]}-features-tab-pane'
+            features_div_id = soup.find('div', id=features_id)
+            if features_div_id:
+                # Find the main div container
+                main_div = features_div_id.find('div', class_='mb2')
+                if main_div:
+                    # Initialize an empty string to store the output
+                    output = ""
+                    # Iterate over the children of the main div
+                    for child in main_div.children:
+                        if child.name == 'div':
+                            # Add the main point
+                            output += f"{child.get_text(strip=True)}:\n"
+                            # Iterate over the next siblings to get all ul elements until the next div
+                            sibling = child.find_next_sibling()
+                            while sibling and sibling.name == 'ul':
+                                for li in sibling.find_all('li'):
+                                    output += f"{li.get_text(strip=True)}\n"
+                                sibling = sibling.find_next_sibling()
+                            output += "\n"
+                    product_details['Features'] = output.strip()
+                else:
+                    print('6th error')
+                    error_model_list.append(m_no)
+                    continue
+
+            final_product_list.append(product_details)
+
+            done_list.append(m_no)
+            print('length: ', len(product_details))
+            if number % 5 ==0:
+                # Create DataFrames
+                df1 = pd.DataFrame(final_product_list)
+                df2 = pd.DataFrame(error_model_list, columns=["error_model_list"])
+                
+                # Create filenames using f-strings
+                final_product_list_file_name = f'final products data(autosave after 100).xlsx'
+                error_model_list_file_name = f'Error list of part number(autosave after 100).xlsx'
+                
+                # Save DataFrames to Excel files with the created filenames
+                df1.to_excel(final_product_list_file_name, index=False)
+                df2.to_excel(error_model_list_file_name, index=False)
+                print(final_product_list_file_name, ' file saved Succesfully')
+                print(error_model_list_file_name, ' file saved Succesfully')
+                print('#'*20)
+                
+        else:
+            print("response.status_code", response.status_code)
+            error_status+=1
+            error_model_list.append(m_no)
+            if error_status == 20:
+                if len(SCRAPER_API_KEY_list)>1:
+                    SCRAPER_API_KEY_list.pop(0)
+                    SCRAPER_API_KEY = SCRAPER_API_KEY_list[0]
+                    print(SCRAPER_API_KEY_list)
+                    
+                else:
+                    time.sleep(10)
+                    SCRAPER_API_KEY_list =['d1b8cd70d48096839914129d037abf04', 'bbb5cc45e9a1ffa202fbf31c1f44e7e5','90c90b35300966b25cae1c16ae4caf2d', '4305c9b2d76c3478ef9880069418cbd8', '5d9caeb3482451de6ca1e97fec9e510a', '1fda79b5163a5534e343db864c204b1c', '79e96c5e9821479624839b60441eca9c', '8a9870701f3e302ab658a0ef9adc0b4b', '17bd9953458c5d4ec1345e29f508f759']
+                    SCRAPER_API_KEY_list = SCRAPER_API_KEY_list[::-1]
+                error_status = 0
+                    
+
+#print(final_product_list)
+#print("Errors: ", error_model_list)
+
+# Create DataFrames
+df1 = pd.DataFrame(final_product_list)
+df2 = pd.DataFrame(error_model_list, columns=["error_model_list"])
+
+# Create filenames using f-strings
+final_product_list_file_name = f'{emp_name}:{emp_no} _{len(final_product_list)}_final_product_list_{SCRAPER_API_KEY}.xlsx'
+error_model_list_file_name = f'Error_{emp_name}:{emp_no}_{len(error_model_list)}_error_model_list.xlsx'
+
+# Save DataFrames to Excel files with the created filenames
+df1.to_excel(final_product_list_file_name, index=False)
+df2.to_excel(error_model_list_file_name, index=False)
+print(final_product_list_file_name, ' file saved Succesfully')
+print(error_model_list_file_name, ' file saved Succesfully')
+print('#'*20)
