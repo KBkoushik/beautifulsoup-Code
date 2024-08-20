@@ -1,0 +1,9 @@
+if response.status_code == 200:
+    attribute_details = {}
+    attribute_details['url'] = url
+    soup = BeautifulSoup(response.content, 'html.parser')
+same_products = soup.find('div', class_ = 'flex flex-wrap mxn1')
+product1 = same_products.find_all('div', class_ = 'font-size-sm')
+for i in product1:
+    
+    print(i.text.strip())
