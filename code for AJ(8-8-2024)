@@ -90,6 +90,7 @@ print("#"*40)
 
 
 
+
 # final_product_list = []
 # error_model_list = []
 # done_list=[]
@@ -155,6 +156,15 @@ for m_no in product_model_list:
                         product_details['price'] = ""
                         #error_model_list.append(m_no)
                         #continue
+            #Extract all colour varient model no
+            colour_varient_models = soup.find('div', class_ = 'flex flex-wrap mxn1')
+            if colour_varient_models:
+                product1 = colour_varient_models.find_all('div', class_ = 'font-size-sm')
+                if product1:
+                    color_varient_product_list = []
+                    for i in product1:
+                        color_varient_product_list.append(i.text.strip())
+                    product_details['color_varient_model'] = color_varient_product_list            
 
             all_image_links = soup.find_all('a', class_='scrollable__item mz-thumb inline-block border mr1')
             # Extract the src attribute from the nested <img> tags
@@ -179,6 +189,13 @@ for m_no in product_model_list:
                       product_details[column_name] = pdf_link['href']
                       pdf_no += 1
               print('Number of PDF: ', len(all_pdf_urls))
+            else:
+                in_items = include_items_class.find_all('div', class_ = 'f10')
+                if in_items:
+                    in_item_list = []
+                    for itm in in_items:
+                        in_item_list.append(itm.text.strip())
+                    product_details['include_items'] = in_item_list
 
             #Find the div with the specified class
             product_info_div_class = soup.find('div', class_='left mr2')
