@@ -28,9 +28,9 @@ d1b8cd70d48096839914129d037abf04
 
 
 
-SCRAPER_API_KEY = '7f5e39eef3e1a4f92c8b8d16a0859548'
+SCRAPER_API_KEY = '17bd9953458c5d4ec1345e29f508f759'
 emp_name = 'koushik'
-emp_no = 2
+emp_no = 3
 
 # !pip install requests
 # !pip install beautifulsoup4
@@ -41,6 +41,8 @@ from bs4 import BeautifulSoup
 import time
 import pandas as pd
 import random
+import os
+from google.colab import drive
 
 
 # Correct raw URL of the CSV file on GitHub
@@ -73,6 +75,7 @@ number = 1
 
 print('The code is executed successfully')
 print("#"*40)
+
 
 
 
@@ -164,7 +167,7 @@ for m_no in product_model_list:
                     color_varient_product_list = []
                     for i in product1:
                         color_varient_product_list.append(i.text.strip())
-                    product_details['color_varient_model'] = color_varient_product_list            
+                    product_details['color_varient_model'] = color_varient_product_list
 
             all_image_links = soup.find_all('a', class_='scrollable__item mz-thumb inline-block border mr1')
             # Extract the src attribute from the nested <img> tags
@@ -275,6 +278,24 @@ for m_no in product_model_list:
 
             done_list.append(m_no)
             print('length: ', len(product_details))
+            if number%2 ==0:
+              # Create DataFrames
+              df1 = pd.DataFrame(final_product_list)
+              # # Specify the directory path
+              google_drive_directory = '/content/drive/My Drive/ColabFiles'  # Change 'ColabFiles' to your desired folder name
+              # # Create the directory if it doesn't exist
+              if not os.path.exists(google_drive_directory):
+                  os.makedirs(google_drive_directory)
+                  print(f"Directory created: {google_drive_directory}")
+
+              # Create filenames using f-strings
+              final_product_list_file_name = f'{google_drive_directory}/{emp_name}:{emp_no}.xlsx'
+              # Save DataFrames to Excel files with the created filenames in Google Drive
+              df1.to_excel(final_product_list_file_name, index=False)
+              # Print confirmation messages
+              print(final_product_list_file_name, ' file saved successfully', 'length:', len(final_product_list))
+
+
         else:
             print("response.status_code", response.status_code)
             error_status+=1
@@ -289,13 +310,23 @@ for m_no in product_model_list:
 df1 = pd.DataFrame(final_product_list)
 df2 = pd.DataFrame(error_model_list, columns=["error_model_list"])
 
-# Create filenames using f-strings
-final_product_list_file_name = f'{emp_name}:{emp_no} _{len(final_product_list)}_final_product_list_{SCRAPER_API_KEY}.xlsx'
-error_model_list_file_name = f'Error_{emp_name}:{emp_no}_{len(error_model_list)}_error_model_list.xlsx'
+#from google.colab import drive
 
-# Save DataFrames to Excel files with the created filenames
+# Mount Google Drive
+#drive.mount('/content/drive')
+
+# Define Google Drive directory
+google_drive_directory = '/content/drive/My Drive/your_directory'
+
+# Create filenames using f-strings
+final_product_list_file_name = f'{google_drive_directory}/{emp_name}:{emp_no}_{len(final_product_list)}.xlsx'
+error_model_list_file_name = f'{google_drive_directory}/Error_{emp_name}:{emp_no}_{len(error_model_list)}_error_model_list.xlsx'
+
+# Save DataFrames to Excel files with the created filenames in Google Drive
 df1.to_excel(final_product_list_file_name, index=False)
 df2.to_excel(error_model_list_file_name, index=False)
-print(final_product_list_file_name, ' file saved Succesfully')
-print(error_model_list_file_name, ' file saved Succesfully')
+
+# Print confirmation messages
+print(final_product_list_file_name, ' file saved successfully')
+print(error_model_list_file_name, ' file saved successfully')
 print('#'*20)
