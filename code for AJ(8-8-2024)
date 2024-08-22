@@ -19,7 +19,15 @@ bbb5cc45e9a1ffa202fbf31c1f44e7e5
 d1b8cd70d48096839914129d037abf04
 
 
-
+# Prevent Colab from disconnecting
+%%javascript
+function KeepAlive() {
+    setInterval(() => {
+        document.querySelector("#connect").click();
+        console.log("Prevented from disconnecting");
+    }, 60000)
+}
+KeepAlive();
 
 
 
