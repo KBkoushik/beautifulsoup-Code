@@ -92,7 +92,10 @@ print("#"*40)
 
 
 
-
+import pandas as pd
+done_df = pd.read_excel('/content/drive/My Drive/ColabFiles/koushik:3_995.xlsx')
+done_list = done_df['product model no'].to_list()
+len(done_list)
 
 
 
