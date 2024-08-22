@@ -316,7 +316,7 @@ df2 = pd.DataFrame(error_model_list, columns=["error_model_list"])
 #drive.mount('/content/drive')
 
 # Define Google Drive directory
-google_drive_directory = '/content/drive/My Drive/your_directory'
+google_drive_directory = '/content/drive/My Drive/ColabFiles'
 
 # Create filenames using f-strings
 final_product_list_file_name = f'{google_drive_directory}/{emp_name}:{emp_no}_{len(final_product_list)}.xlsx'
