@@ -328,7 +328,7 @@ google_drive_directory = '/content/drive/My Drive/ColabFiles'
 
 # Create filenames using f-strings
 final_product_list_file_name = f'{google_drive_directory}/{emp_name}:{emp_no}_{len(final_product_list)}.xlsx'
-error_model_list_file_name = f'{google_drive_directory}/Error_{emp_name}:{emp_no}_{len(error_model_list)}_error_model_list.xlsx'
+error_model_list_file_name = f'{google_drive_directory}/Error_{emp_name}:{emp_no}_{len(error_model_list)}.xlsx'
 
 # Save DataFrames to Excel files with the created filenames in Google Drive
 df1.to_excel(final_product_list_file_name, index=False)
